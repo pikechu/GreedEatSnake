@@ -19,6 +19,14 @@ ELE_WHITE_COLOR = (250, 255, 240)
 SNAKE_WEIGHT = 30
 SNAKE_HEIGHT = 30
 
+BUTTON_COLOR = (100, 200, 100)
+BUTTON_HOVER_COLOR = (150, 250, 150)
+
+button_start_rect = pygame.Rect(0, 0, 100, 50)
+button_start_rect.center = (WINDOW_SIZE_X // 2, WINDOW_SIZE_Y // 2)
+button_quit_rect = pygame.Rect(0, 0, 100, 50)
+button_quit_rect.center = (WINDOW_SIZE_X // 2, WINDOW_SIZE_Y // 2 + 100)
+
 
 class Point(object):
     def __init__(self, x, y):
@@ -181,13 +189,24 @@ def draw_score_text(score_text):
     screen.blit(surface, (0, 0))
 
 
-def draw_buttons():
+def draw_buttons(mouse_pos):
+    # 如果鼠标悬停在按钮上，改变按钮颜色
+    if button_start_rect.collidepoint(mouse_pos):
+        pygame.draw.rect(screen, BUTTON_HOVER_COLOR, button_start_rect)
+    else:
+        pygame.draw.rect(screen, BUTTON_COLOR, button_start_rect)
+    if button_quit_rect.collidepoint(mouse_pos):
+        pygame.draw.rect(screen, BUTTON_HOVER_COLOR, button_quit_rect)
+    else:
+        pygame.draw.rect(screen, BUTTON_COLOR, button_quit_rect)
+
     font_obj = pygame.font.Font(pygame.font.get_default_font(), 15)
-    surface = font_obj.render('start', True, BLACK_COLOR)
-    screen.blit(surface, (WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 3))
-    surface = font_obj.render('end', True, BLACK_COLOR)
-    screen.blit(surface, (WINDOW_SIZE_X / 2, 2 * WINDOW_SIZE_Y / 3))
-    deal_game_end()
+    text_surface_start = font_obj.render('start', True, BLACK_COLOR)
+    text_surface_quit = font_obj.render('quit', True, BLACK_COLOR)
+    text_rect_start = text_surface_start.get_rect(center=button_start_rect.center)
+    text_rect_quit = text_surface_start.get_rect(center=button_quit_rect.center)
+    screen.blit(text_surface_start, text_rect_start)
+    screen.blit(text_surface_quit, text_rect_quit)
 
 
 def game_init():
@@ -205,11 +224,27 @@ def check_time(last_refresh_time, difficulty):
 
 
 def main_title():
-    screen.fill(WHITE_COLOR)
-    draw_buttons()
+    running = True
+    while running:
+        mouse_pos = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # 1代表左键点击
+                    if button_start_rect.collidepoint(mouse_pos):
+                        starting(difficulty=Difficulty.LUNATIC)
+                        print('game start')
+                    if button_quit_rect.collidepoint(mouse_pos):
+                        running = False
+        screen.fill(WHITE_COLOR)
+        draw_buttons(mouse_pos)
+        pygame.display.flip()
+    print('quit game')
+    pygame.quit()
 
 
-def running(difficulty: float = Difficulty.EASY):
+def starting(difficulty: float = Difficulty.EASY):
     score, move_direction, snake, food = game_init()
     draw_score_text(f'score:{score}')
     clock = pygame.time.Clock()
@@ -230,11 +265,11 @@ def running(difficulty: float = Difficulty.EASY):
 
 if __name__ == '__main__':
     pygame.init()
-    WINDOW_SIZE_X = 300
-    WINDOW_SIZE_Y = 300
+    # WINDOW_SIZE_X = 800
+    # WINDOW_SIZE_Y = 800
     screen = pygame.display.set_mode(size=(WINDOW_SIZE_X, WINDOW_SIZE_Y), depth=32)
     pygame.display.set_caption('GreedEatSnake')
-    #main_title()
-    t = threading.Thread(target=running, args=[Difficulty.INHUMAN])
-    t.start()
+    main_title()
+    # t = threading.Thread(target=main_title)
+    # t.start()
 
